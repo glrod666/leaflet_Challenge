@@ -65,4 +65,15 @@ d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
   };
 
   legend.addTo(map);
+
+  // Style the legend elements with CSS
+  document.querySelector(".info.legend").style.padding = "6px 8px";
+  document.querySelector(".info.legend").style.backgroundColor = "#fff";
+  document.querySelector(".info.legend").style.borderRadius = "3px";
+  document.querySelector(".info.legend").style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.1)";
+
+  // Add legend title
+  var legendTitle = document.createElement("div");
+  legendTitle.innerHTML = "<strong>Depth Legend</strong>";
+  document.querySelector(".info.legend").insertBefore(legendTitle, document.querySelector(".info.legend i"));
 });
