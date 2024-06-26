@@ -1,62 +1,73 @@
-// Initialize the map
-var map = L.map('map').setView([37.7749, -122.4194], 5);
+// Set up the map
+var map = L.map('map').setView([20, 0], 2);
 
-// Add the tile layer
+// Add a tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Fetch earthquake data and add to the map
-fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson')
-    .then(response => response.json())
-    .then(data => {
-        L.geoJSON(data, {
-            pointToLayer: function (feature, latlng) {
-                return L.circleMarker(latlng, {
-                    radius: getRadius(feature.properties.mag),
-                    fillColor: getColor(feature.geometry.coordinates[2]),
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                });
-            },
-            onEachFeature: function (feature, layer) {
-                layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>Magnitude: ${feature.properties.mag}</p><p>Depth: ${feature.geometry.coordinates[2]} km</p>`);
-            }
-        }).addTo(map);
-    });
-
-// Function to determine color based on depth
-function getColor(depth) {
-    return depth > 90 ? '#FF0000' :
-           depth > 70 ? '#FF4500' :
-           depth > 50 ? '#FF8C00' :
-           depth > 30 ? '#FFA500' :
-           depth > 10 ? '#FFD700' :
-                        '#FFFF00';
-}
-
-// Function to calculate radius based on magnitude
-function getRadius(magnitude) {
-    return magnitude * 4;
-}
-
-// Add legend to the map
-var legend = L.control({ position: 'bottomright' });
-
-legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'info legend'),
-        depths = [0, 10, 30, 50, 70, 90],
-        labels = [];
-        
-    for (var i = 0; i < depths.length; i++) {
-        div.innerHTML +=
-            '<i style="background:' + getColor(depths[i] + 1) + '"></i> ' +
-            depths[i] + (depths[i + 1] ? '&ndash;' + depths[i + 1] + '<br>' : '+');
+// Fetch the earthquake data
+d3.json("static/data/all_week.geojson").then(function(data) {
+    // Define a function to style each feature
+    function style(feature) {
+        return {
+            fillColor: getColor(feature.geometry.coordinates[2]),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.7,
+            radius: getRadius(feature.properties.mag)
+        };
     }
 
-    return div;
-};
+    // Define a function to get color based on depth
+    function getColor(depth) {
+        return depth > 90 ? '#800026' :
+               depth > 70 ? '#BD0026' :
+               depth > 50 ? '#E31A1C' :
+               depth > 30 ? '#FC4E2A' :
+               depth > 10 ? '#FD8D3C' :
+                            '#FEB24C';
+    }
 
-legend.addTo(map)
+    // Define a function to get radius based on magnitude
+    function getRadius(magnitude) {
+        return magnitude ? magnitude * 4 : 1;
+    }
+
+    // Define a function for onEachFeature
+    function onEachFeature(feature, layer) {
+        if (feature.properties && feature.properties.place) {
+            layer.bindPopup("<h3>" + feature.properties.place + "</h3><hr><p>Magnitude: " + feature.properties.mag + "<br>Depth: " + feature.geometry.coordinates[2] + " km</p>");
+        }
+    }
+
+    // Create a GeoJSON layer with the data
+    L.geoJson(data, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng);
+        },
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(map);
+
+    // Add a legend to the map
+    var legend = L.control({ position: 'bottomright' });
+
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend'),
+            depths = [0, 10, 30, 50, 70, 90],
+            labels = [];
+
+        // loop through our depth intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < depths.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(depths[i] + 1) + '"></i> ' +
+                depths[i] + (depths[i + 1] ? '&ndash;' + depths[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+});
