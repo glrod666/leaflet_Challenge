@@ -52,7 +52,7 @@ d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
 
   legend.onAdd = function() {
     var div = L.DomUtil.create('div', 'info legend'),
-        depths = [-10, 10, 30, 50, 70, 90],
+        depths = [0, 10, 30, 50, 70, 90],
         colors = ["#98ee00", "#d4ee00", "#eecc00", "#ee9c00", "#ea822c", "#ea2c2c"];
 
     // Loop through the intervals of depth to generate a label with a colored square for each interval
