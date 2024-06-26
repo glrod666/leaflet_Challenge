@@ -1,66 +1,71 @@
+// Create the map
 var map = L.map('map').setView([20, 0], 2);
 
+// Add a tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-3. **Fetch and Process the Earthquake Data**:
-   - Use D3 to fetch the GeoJSON data.
-   - Create functions to determine marker size and color based on magnitude and depth.
+// Fetch the earthquake data
+fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson')
+    .then(response => response.json())
+    .then(data => {
+        // Function to determine marker size based on magnitude
+        function markerSize(magnitude) {
+            return magnitude * 4;
+        }
 
-d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson").then(function(data) {
-  
-  function getColor(depth) {
-    return depth > 100 ? '#800026' :
-           depth > 50  ? '#BD0026' :
-           depth > 20  ? '#E31A1C' :
-           depth > 10  ? '#FC4E2A' :
-           depth > 0   ? '#FD8D3C' :
-                         '#FEB24C';
-  }
+        // Function to determine marker color based on depth
+        function markerColor(depth) {
+            return depth > 90 ? '#800026' :
+                   depth > 70 ? '#BD0026' :
+                   depth > 50 ? '#E31A1C' :
+                   depth > 30 ? '#FC4E2A' :
+                   depth > 10 ? '#FD8D3C' :
+                                '#FEB24C';
+        }
 
-  function getRadius(magnitude) {
-    return magnitude * 4;
-  }
+        // Loop through the earthquake data and create a marker for each earthquake
+        data.features.forEach(feature => {
+            var coordinates = feature.geometry.coordinates;
+            var magnitude = feature.properties.mag;
+            var depth = coordinates[2];
 
-  function onEachFeature(feature, layer) {
-    if (feature.properties && feature.properties.place && feature.properties.mag) {
-      layer.bindPopup("<h3>" + feature.properties.place + "</h3><hr><p>Magnitude: " + feature.properties.mag + "<br>Depth: " + feature.geometry.coordinates[2] + " km</p>");
-    }
-  }
+            var marker = L.circleMarker([coordinates[1], coordinates[0]], {
+                radius: markerSize(magnitude),
+                fillColor: markerColor(depth),
+                color: '#000',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
 
-  L.geoJSON(data, {
-    pointToLayer: function (feature, latlng) {
-      return L.circleMarker(latlng, {
-        radius: getRadius(feature.properties.mag),
-        fillColor: getColor(feature.geometry.coordinates[2]),
-        color: "#000",
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8
-      });
-    },
-    onEachFeature: onEachFeature
-  }).addTo(map);
+            // Add a popup to each marker
+            marker.bindPopup(`<h3>${feature.properties.place}</h3>
+                              <hr>
+                              <p>Magnitude: ${magnitude}</p>
+                              <p>Depth: ${depth} km</p>
+                              <p>${new Date(feature.properties.time)}</p>`);
+        });
 
-  // Add legend
-  var legend = L.control({position: 'bottomright'});
+        // Add a legend to the map
+        var legend = L.control({ position: 'bottomright' });
 
-  legend.onAdd = function (map) {
-    var div = L.DomUtil.create('div', 'legend'),
-        grades = [0, 10, 20, 50, 100],
-        labels = [];
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info legend'),
+                depths = [0, 10, 30, 50, 70, 90],
+                labels = [];
 
-    div.innerHTML += '<strong>Depth (km)</strong><br>';
+            // Loop through depth intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < depths.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + markerColor(depths[i] + 1) + '"></i> ' +
+                    depths[i] + (depths[i + 1] ? '&ndash;' + depths[i + 1] + '<br>' : '+');
+            }
 
-    for (var i = 0; i < grades.length; i++) {
-      div.innerHTML +=
-        '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-    }
+            return div;
+        };
 
-    return div;
-  };
-
-  legend.addTo(map);
-});
+        legend.addTo(map);
+    })
+    .catch(error => console.log(error));
