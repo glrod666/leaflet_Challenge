@@ -1,7 +1,7 @@
-// Create a map centered on a specific location and zoom level
+//  map centered on a specific location and zoom level
 var map = L.map('map').setView([37.7749, -122.4194], 5);  // Centered on San Francisco, CA
 
-// Add a tile layer to the map (This is the base map)
+//  tile layer to the map (This is the base map)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
