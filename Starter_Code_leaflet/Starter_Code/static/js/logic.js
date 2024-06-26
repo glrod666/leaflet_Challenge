@@ -59,7 +59,7 @@ d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
 
     for (var i = 0; i < depths.length; i++) {
       var depthLabel = depths[i] + (depths[i + 1] ? '&ndash;' + depths[i + 1] + ' km' : '+ km');
-      div.innerHTML += '<i style="background:' + colors[i] + '"></i>' + depthLabel + '<br>';
+      div.innerHTML += '<i style="background:' + colors[i] + '"></i> ' + depthLabel + '<br>';
     }
 
     return div;
